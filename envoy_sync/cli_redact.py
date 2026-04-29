@@ -12,6 +12,14 @@ from envoy_sync.redactor import REDACTED_PLACEHOLDER, redact_env
 
 
 def run_redact(argv: Optional[List[str]] = None) -> int:
+    """Parse arguments and run the redact command.
+
+    Args:
+        argv: Argument list to parse. Defaults to sys.argv if None.
+
+    Returns:
+        Exit code: 0 on success, 2 on input/file error.
+    """
     parser = argparse.ArgumentParser(
         prog="envoy-sync redact",
         description="Print an env file with sensitive values redacted.",
@@ -57,16 +65,26 @@ def run_redact(argv: Optional[List[str]] = None) -> int:
     print(export_env(result.redacted, fmt=args.format), end="")
 
     if args.show_summary:
-        if result.redaction_count == 0:
-            print("No sensitive keys detected.", file=sys.stderr)
-        else:
-            print(
-                f"Redacted {result.redaction_count} key(s): "
-                + ", ".join(result.redacted_keys),
-                file=sys.stderr,
-            )
+        _print_summary(result)
 
     return 0
+
+
+def _print_summary(result) -> None:
+    """Print a human-readable redaction summary to stderr.
+
+    Args:
+        result: The redaction result object containing redaction_count
+                and redacted_keys.
+    """
+    if result.redaction_count == 0:
+        print("No sensitive keys detected.", file=sys.stderr)
+    else:
+        print(
+            f"Redacted {result.redaction_count} key(s): "
+            + ", ".join(result.redacted_keys),
+            file=sys.stderr,
+        )
 
 
 def main() -> None:  # pragma: no cover
