@@ -69,3 +69,34 @@ def merge_envs(
             result[key] = value
 
     return result
+
+
+def find_conflicts(
+    sources: List[Tuple[str, Dict[str, str]]],
+) -> Dict[str, List[Tuple[str, str]]]:
+    """Return all keys that have differing values across sources.
+
+    Parameters
+    ----------
+    sources:
+        Ordered list of ``(source_name, mapping)`` tuples.
+
+    Returns
+    -------
+    dict
+        Mapping of conflicting key to a list of ``(source_name, value)`` pairs
+        for every source that defines that key with a distinct value.
+        Keys with identical values across all sources are omitted.
+    """
+    seen: Dict[str, List[Tuple[str, str]]] = {}  # key -> [(source_name, value), ...]
+
+    for source_name, env in sources:
+        for key, value in env.items():
+            seen.setdefault(key, [])
+            seen[key].append((source_name, value))
+
+    return {
+        key: entries
+        for key, entries in seen.items()
+        if len({v for _, v in entries}) > 1
+    }
