@@ -42,6 +42,11 @@ def parse_env_file(filepath: str | Path) -> Dict[str, str]:
                     f"Empty key at line {line_number}: '{line}'"
                 )
 
+            if not key.replace("_", "").isalnum() or key[0].isdigit():
+                raise ValueError(
+                    f"Invalid key name at line {line_number}: '{key}'"
+                )
+
             # Strip inline comments (outside quotes)
             value = _strip_inline_comment(value.strip())
             # Strip surrounding quotes
