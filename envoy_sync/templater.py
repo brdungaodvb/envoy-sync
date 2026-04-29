@@ -24,7 +24,12 @@ def _resolve_value(
     context: dict[str, str],
     missing: list[str],
 ) -> str:
-    """Replace ${VAR} and $VAR references in *value* using env + context."""
+    """Replace ${VAR} and $VAR references in *value* using env + context.
+
+    Resolution order: *context* is checked first, then *env* (previously
+    rendered keys within the same template).  Unresolvable references are
+    left as-is and their names are appended to *missing*.
+    """
 
     def replacer(match: re.Match) -> str:
         key = match.group(1) or match.group(2)
@@ -66,3 +71,21 @@ def render_template(
         rendered[key] = resolved
 
     return RenderResult(rendered=rendered, unresolved=sorted(set(unresolved)))
+
+
+def extract_variable_refs(value: str) -> list[str]:
+    """Return a sorted list of unique variable names referenced in *value*.
+
+    Recognises both ``${VAR}`` and ``$VAR`` syntax.
+
+    Args:
+        value: A raw (un-rendered) template value string.
+
+    Returns:
+        Sorted list of variable name strings found in *value*.
+    """
+    refs = {
+        match.group(1) or match.group(2)
+        for match in _VAR_PATTERN.finditer(value)
+    }
+    return sorted(refs)
